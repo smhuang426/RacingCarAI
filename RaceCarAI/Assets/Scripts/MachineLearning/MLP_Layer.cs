@@ -70,7 +70,45 @@ public class MLP_Layer
 	/*-------------------------
 	Private Methods
 	-------------------------*/
-	private MLState Backward ( float[] output, float[] input, ref float[,] deltaW, ref float[] deltaB, ref float[] prev_output )
+	private MLState BatchBackward ( float[][] output, float[][] input, ref float[,] deltaW, ref float[] deltaB, ref float[][] prev_output )
+	{
+		int batchSize       = output.GetLength (0);
+		float [,] tmpDeltaW = new float[numOut, numIn];
+		float [] tmpDeltaB  = new float[numOut];
+
+		FillFloatArrayToZero (ref deltaW);
+		FillFloatArrayToZero (ref deltaB);
+
+		for ( int i = 0; i < batchSize ; i++ )
+		{
+			if ( Backward ( output [i], input [i], (float)batchSize, ref tmpDeltaW, ref tmpDeltaB, ref prev_output [i] ) == MLState.ML_ERROR )
+			{
+				return MLState.ML_ERROR;
+			}
+
+			FloatArraySum ( tmpDeltaB, deltaB, ref deltaB );
+			FloatArraySum ( tmpDeltaW, deltaW, ref deltaW );
+		}
+
+		return MLState.ML_SUCCESS;
+	}
+
+	private MLState BatchForward ( float[][] input, ref float[][] output )
+	{
+		int batchSize = input.GetLength (0);
+
+		for ( int i = 0; i < batchSize ; i++ )
+		{
+			if ( Forward (input [i], ref output [i]) == MLState.ML_ERROR )
+			{
+				return MLState.ML_ERROR;
+			}
+		}
+
+		return MLState.ML_SUCCESS;
+	}
+
+	private MLState Backward ( float[] output, float[] input, float batchSize, ref float[,] deltaW, ref float[] deltaB, ref float[] prev_output )
 	{
 		if ( output.Length != numOut )
 		{
@@ -97,11 +135,13 @@ public class MLP_Layer
 		{
 			for (int j = 0; j < numIn; j++)
 			{
-				deltaW [i, j] = output [i] * input [j];
+				deltaW [i, j] = output [i] * input [j] / batchSize;
 			}
 
-			deltaB [i] = output [i];
+			deltaB [i] = output [i] / batchSize;
 		}
+
+		FillFloatArrayToZero (ref prev_output);
 
 		for (int i = 0; i < numIn; i++)
 		{
@@ -121,6 +161,8 @@ public class MLP_Layer
 			Debug.LogError ("[Forward] number of float[] input(" + input.Length + ") is not equal to numIn(" + numIn + ")");
 			return MLState.ML_ERROR;
 		}
+
+		FillFloatArrayToZero (ref output);
 
 		for (int i = 0; i < numOut; i++)
 		{
@@ -148,6 +190,60 @@ public class MLP_Layer
 		}
 
 		return MLState.ML_SUCCESS;
+	}
+
+	private MLState FloatArraySum( float[] arr1, float[] arr2, ref float[] outArr )
+	{
+		if ( arr1.Length != arr2.Length )
+		{
+			Debug.LogError ("[FloatArraySum] Size of both array are not the same");
+			return MLState.ML_ERROR;
+		}
+
+		for ( int i = 0; i < arr1.Length; i++ )
+		{
+			outArr [i] = arr1 [i] + arr2 [i];
+		}
+
+		return MLState.ML_SUCCESS;
+	}
+
+	private MLState FloatArraySum( float[,] arr1, float[,] arr2, ref float[,] outArr )
+	{
+		if ( arr1.GetLength(0) != arr2.GetLength(0) && arr1.GetLength(1) != arr2.GetLength(1) )
+		{
+			Debug.LogError ("[FloatArraySum] Size of both array are not the same");
+			return MLState.ML_ERROR;
+		}
+
+		for ( int i = 0; i < arr1.GetLength(0); i++ )
+		{
+			for (int j = 0; j < arr1.GetLength (1); j++)
+			{
+				outArr [i, j] = arr1 [i, j] + arr2 [i, j];
+			}
+		}
+
+		return MLState.ML_SUCCESS;
+	}
+
+	private void FillFloatArrayToZero( ref float[] arr )
+	{
+		for ( int i = 0; i < arr.Length; i++ )
+		{
+			arr [i] = 0;
+		}
+	}
+
+	private void FillFloatArrayToZero( ref float[,] arr )
+	{
+		for ( int i = 0; i < arr.GetLength(0); i++ )
+		{
+			for (int j = 0; j < arr.GetLength (1); j++)
+			{
+				arr [i, j] = 0;
+			}
+		}
 	}
 
 	/*-------------------------
