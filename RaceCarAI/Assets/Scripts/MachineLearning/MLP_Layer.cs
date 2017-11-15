@@ -38,7 +38,7 @@ public class MLP_Layer
 	/*-------------------------
 	Public Methods
 	-------------------------*/
-	public MLState Initialize ( int num_out, int num_in, ActiveFc AtFc )
+	public MLState Initialize ( int num_out, int num_in, ActiveFc AtFc, LossFc LsFc )
 	{
 		if ( ( num_in <= 0 ) || ( num_out <= 0 ) )
 		{
@@ -46,7 +46,7 @@ public class MLP_Layer
 			return MLState.ML_ERROR;
 		}
 
-		AF         = AtFc; 
+		AF         = AtFc;
 
 		numIn      = num_in;
 		numOut     = num_out;
@@ -67,10 +67,7 @@ public class MLP_Layer
 		return MLState.ML_SUCCESS;
 	}
 
-	/*-------------------------
-	Private Methods
-	-------------------------*/
-	private MLState BatchBackward ( float[][] output, float[][] input, ref float[,] deltaW, ref float[] deltaB, ref float[][] prev_output )
+	public MLState BatchBackward ( float[][] output, float[][] input, ref float[,] deltaW, ref float[] deltaB, ref float[][] prev_output )
 	{
 		int batchSize       = output.GetLength (0);
 		float [,] tmpDeltaW = new float[numOut, numIn];
@@ -93,7 +90,7 @@ public class MLP_Layer
 		return MLState.ML_SUCCESS;
 	}
 
-	private MLState BatchForward ( float[][] input, ref float[][] output )
+	public MLState BatchForward ( float[][] input, ref float[][] output )
 	{
 		int batchSize = input.GetLength (0);
 
@@ -108,6 +105,9 @@ public class MLP_Layer
 		return MLState.ML_SUCCESS;
 	}
 
+	/*-------------------------
+	Private Methods
+	-------------------------*/
 	private MLState Backward ( float[] output, float[] input, float batchSize, ref float[,] deltaW, ref float[] deltaB, ref float[] prev_output )
 	{
 		if ( output.Length != numOut )
