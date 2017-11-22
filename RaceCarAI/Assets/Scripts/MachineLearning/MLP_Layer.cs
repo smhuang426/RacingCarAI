@@ -35,6 +35,8 @@ public class MLP_Layer
 
 	ActiveFc AF;
 
+	float[][] layerInput;
+
 	/*-------------------------
 	Public Methods
 	-------------------------*/
@@ -67,8 +69,14 @@ public class MLP_Layer
 		return MLState.ML_SUCCESS;
 	}
 
-	public MLState BatchBackward ( float[][] output, float[][] input, ref float[,] deltaW, ref float[] deltaB, ref float[][] prev_output )
+	public MLState BatchBackward ( float[][] output, ref float[,] deltaW, ref float[] deltaB, ref float[][] prev_output )
 	{
+		if ( layerInput == null )
+		{
+			Debug.LogError ("[BatchBackward] layerInput is null");
+			return MLState.ML_ERROR;
+		}
+
 		int batchSize       = output.GetLength (0);
 		float [,] tmpDeltaW = new float[numOut, numIn];
 		float [] tmpDeltaB  = new float[numOut];
@@ -78,7 +86,7 @@ public class MLP_Layer
 
 		for ( int i = 0; i < batchSize ; i++ )
 		{
-			if ( Backward ( output [i], input [i], (float)batchSize, ref tmpDeltaW, ref tmpDeltaB, ref prev_output [i] ) == MLState.ML_ERROR )
+			if ( Backward ( output [i], layerInput [i], (float)batchSize, ref tmpDeltaW, ref tmpDeltaB, ref prev_output [i] ) == MLState.ML_ERROR )
 			{
 				return MLState.ML_ERROR;
 			}
@@ -94,12 +102,29 @@ public class MLP_Layer
 	{
 		int batchSize = input.GetLength (0);
 
+		layerInput = input;
+
 		for ( int i = 0; i < batchSize ; i++ )
 		{
 			if ( Forward (input [i], ref output [i]) == MLState.ML_ERROR )
 			{
 				return MLState.ML_ERROR;
 			}
+		}
+
+		return MLState.ML_SUCCESS;
+	}
+
+	public MLState Update ( float[,] deltaW,  float[] deltaB , float lrnRate )
+	{
+		for ( int i = 0; i < numOut; i++ )
+		{
+			for ( int j = 0; j < numIn; j++ )
+			{
+				Weight [i, j] = Weight [i, j] - lrnRate * deltaW [i, j];
+			}
+
+			bias [i] = bias [i] - lrnRate * bias [i];
 		}
 
 		return MLState.ML_SUCCESS;
