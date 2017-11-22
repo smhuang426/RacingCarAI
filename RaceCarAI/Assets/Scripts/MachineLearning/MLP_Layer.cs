@@ -40,7 +40,7 @@ public class MLP_Layer
 	/*-------------------------
 	Public Methods
 	-------------------------*/
-	public MLState Initialize ( int num_out, int num_in, ActiveFc AtFc, LossFc LsFc )
+	public MLState Initialize ( int num_out, int num_in, ActiveFc AtFc )
 	{
 		if ( ( num_in <= 0 ) || ( num_out <= 0 ) )
 		{
