@@ -102,7 +102,7 @@ public class MLP_Layer
 	{
 		int batchSize = input.GetLength (0);
 
-		layerInput = input;
+		layerInput = (float[][])input.Clone ();
 
 		for ( int i = 0; i < batchSize ; i++ )
 		{
@@ -113,6 +113,54 @@ public class MLP_Layer
 		}
 
 		return MLState.ML_SUCCESS;
+	}
+
+	public MLState Forward ( float[] input, ref float[] output )
+	{
+		if ( input.Length != numIn )
+		{
+			Debug.LogError ("[Forward] number of float[] input(" + input.Length + ") is not equal to numIn(" + numIn + ")");
+			return MLState.ML_ERROR;
+		}
+
+		FillFloatArrayToZero (ref output);
+
+		for (int i = 0; i < numOut; i++)
+		{
+			for (int j = 0; j < numIn; j++)
+			{
+				output [i] += Weight [i, j] * input [j];
+			}
+
+			output [i] += bias [i];
+		}
+
+		switch ( AF )
+		{
+		case ActiveFc.RELU:
+			RELU ( output, ref output, MLDirection.Forward );
+			break;
+		case ActiveFc.Sigmoid:
+			Sigmoid ( output, ref output, MLDirection.Forward );
+			break;
+		case ActiveFc.Tanh:
+			Tanh ( output, ref output, MLDirection.Forward );
+			break;
+		default:
+			break;
+		}
+
+		return MLState.ML_SUCCESS;
+	}
+
+	public int GetNumInput ()
+	{
+		return numIn;
+	}
+
+	public int GetNumOutput ()
+	{
+		return numOut;
 	}
 
 	public MLState Update ( float[,] deltaW,  float[] deltaB , float lrnRate )
@@ -174,44 +222,6 @@ public class MLP_Layer
 			{
 				prev_output [i] += Weight [i, j] * output [j];
 			}
-		}
-
-		return MLState.ML_SUCCESS;
-	}
-
-	private MLState Forward ( float[] input, ref float[] output )
-	{
-		if ( input.Length != numIn )
-		{
-			Debug.LogError ("[Forward] number of float[] input(" + input.Length + ") is not equal to numIn(" + numIn + ")");
-			return MLState.ML_ERROR;
-		}
-
-		FillFloatArrayToZero (ref output);
-
-		for (int i = 0; i < numOut; i++)
-		{
-			for (int j = 0; j < numIn; j++)
-			{
-				output [i] += Weight [i, j] * input [j];
-			}
-
-			output [i] += bias [i];
-		}
-
-		switch ( AF )
-		{
-		case ActiveFc.RELU:
-			RELU ( output, ref output, MLDirection.Forward );
-			break;
-		case ActiveFc.Sigmoid:
-			Sigmoid ( output, ref output, MLDirection.Forward );
-			break;
-		case ActiveFc.Tanh:
-			Tanh ( output, ref output, MLDirection.Forward );
-			break;
-		default:
-			break;
 		}
 
 		return MLState.ML_SUCCESS;
