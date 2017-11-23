@@ -65,7 +65,7 @@ public class MLP_ANN
 		return MLState.ML_SUCCESS;
 	}
 
-	public MLState Run ( float[] train_input, ref float[] train_output )
+	public MLState Run ( float[] input, ref float[] output )
 	{
 		if ( ANN_List.Count == 0 )
 		{
@@ -73,31 +73,31 @@ public class MLP_ANN
 			return MLState.ML_ERROR;
 		}
 
-		if ( train_input.Length != ANN_List[0].GetNumInput() )
+		if ( input.Length != ANN_List[0].GetNumInput() )
 		{
-			Debug.LogError ("[Run] Len of train_input is not equal to ANN_List[0].GetNumInput() ");
+			Debug.LogError ("[Run] Len of input is not equal to ANN_List[0].GetNumInput() ");
 			return MLState.ML_ERROR;
 		}
 
-		if ( train_output.Length != ANN_List[ANN_List.Count - 1].GetNumOutput() )
+		if ( output.Length != ANN_List[ANN_List.Count - 1].GetNumOutput() )
 		{
-			Debug.LogError ("[Run] Len of train_output is not equal to ANN_List[ANN_List.Count-1].GetNumOutput() ");
+			Debug.LogError ("[Run] Len of output is not equal to ANN_List[ANN_List.Count-1].GetNumOutput() ");
 			return MLState.ML_ERROR;
 		}
 
 		float[] tmp_output = new float[0];
-		train_output       = (float[])train_input.Clone (); 
+		output             = (float[])input.Clone (); 
 
 		for ( int i = 0; i < ANN_List.Count; i++ )
 		{
 			Array.Resize ( ref tmp_output, ANN_List[i].GetNumOutput() );
 
-			if ( ANN_List [i].Forward ( train_output, ref tmp_output ) == MLState.ML_ERROR )
+			if ( ANN_List [i].Forward ( output, ref tmp_output ) == MLState.ML_ERROR )
 			{
 				return MLState.ML_ERROR;
 			}
 
-			train_output = (float[])tmp_output.Clone ();
+			output = (float[])tmp_output.Clone ();
 		}
 
 		return MLState.ML_SUCCESS;
