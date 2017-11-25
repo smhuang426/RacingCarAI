@@ -66,6 +66,10 @@ public class MLP_Layer
 			}
 		}
 
+		Debug.Log ( "Create Layer with input:" + numIn + ", output:" + numOut );
+		MLP_Print.PrintLayerParameter ( numOut, numIn, Weight, bias );
+		Debug.Log ("");
+
 		return MLState.ML_SUCCESS;
 	}
 

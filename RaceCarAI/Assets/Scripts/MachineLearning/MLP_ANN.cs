@@ -31,7 +31,7 @@ public class MLP_ANN
 			}
 		}
 
-		for ( int i = 1; i < MLP_List.Length - 1; i++ )
+		for ( int i = 1; i < MLP_List.Length; i++ )
 		{
 			if ( ( MLP_List.Length - 1 ) == i )
 			{
@@ -164,7 +164,7 @@ public class MLP_ANN
 		}
 
 		float[] tmp_output = new float[0];
-		output             = (float[])input.Clone (); 
+		output             = (float[])input.Clone ();
 
 		for ( int i = 0; i < ANN_List.Count; i++ )
 		{
