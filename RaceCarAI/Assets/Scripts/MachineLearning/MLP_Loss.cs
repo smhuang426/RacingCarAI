@@ -37,6 +37,8 @@ public class MLP_Loss
 
 		for ( int i = 0; i < batchSize; i++ )
 		{
+			output[i] = new float[ yHead.GetLength(1) ];
+
 			switch (LF)
 			{
 			case LossFc.MeanSquaredError:

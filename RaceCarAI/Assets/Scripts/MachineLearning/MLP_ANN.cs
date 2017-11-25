@@ -8,7 +8,7 @@ public class MLP_ANN
 	/*-------------------------
 	Variables
 	-------------------------*/
-	List<MLP_Layer> ANN_List;
+	List<MLP_Layer> ANN_List = new List<MLP_Layer> ();
 	MLP_Loss        LossFunction;
 
 	/*-------------------------
@@ -57,11 +57,89 @@ public class MLP_ANN
 
 	public MLState Test ( float[][] test_input, float[][] test_output, ref float errorRate )
 	{
+		if ( test_input.GetLength(0) != test_output.GetLength(0) )
+		{
+			Debug.LogError ("[Test] test_input's batch size is different from test_output's");
+			return MLState.ML_ERROR;
+		}
+
+		int batchSize                = test_input.GetLength (0);
+		int numLayer                 = ANN_List.Count;
+		float[][] tmp_input          = (float[][])test_input.Clone ();
+		float[][] back_err           = new float[ batchSize ][];
+		float[][] layerOutput        = new float[batchSize][];
+
+		errorRate = 0;
+
+		for ( int layer = 0; layer < numLayer - 1; layer++ )
+		{
+			if ( ANN_List[layer].BatchForward ( tmp_input, ref layerOutput ) == MLState.ML_ERROR )
+			{
+				return MLState.ML_ERROR;
+			}
+
+			tmp_input = (float[][])layerOutput.Clone ();
+		}
+
+		LossFunction.Evaluate( layerOutput, test_output, ref errorRate, ref back_err );
+
 		return MLState.ML_SUCCESS;
 	}
 
-	public MLState Train ( float[][] train_input, float[][] train_output, float lrnRate )
+	public MLState Train ( float[][] train_input, float[][] train_output, float lrnRate, ref float errorRate )
 	{
+		if ( train_input.GetLength(0) != train_output.GetLength(0) )
+		{
+			Debug.LogError ("[Train] train_input's batch size is different from train_output's");
+			return MLState.ML_ERROR;
+		}
+
+		int batchSize                = train_input.GetLength (0);
+		int numLayer                 = ANN_List.Count;
+		List<float[][]> layerOutputs = new List<float[][]> ();
+		float[][] tmp_input          = (float[][])train_input.Clone ();
+		float[][] back_err           = new float[ batchSize ][];
+
+		errorRate = 0;
+
+		for ( int layer = 0; layer < numLayer - 1; layer++ )
+		{
+			float[][] layerOutput = new float[batchSize][];
+
+			if ( ANN_List[layer].BatchForward ( tmp_input, ref layerOutput ) == MLState.ML_ERROR )
+			{
+				return MLState.ML_ERROR;
+			}
+
+			tmp_input = (float[][])layerOutput.Clone ();
+			layerOutputs.Add ( layerOutput );
+		}
+
+		LossFunction.Evaluate( layerOutputs[ numLayer - 1 ], train_output, ref errorRate, ref back_err );
+
+		for ( int layer = numLayer - 1; layer < 0; layer-- )
+		{
+			int numOut = ANN_List [layer].GetNumOutput ();
+			int numIn  = ANN_List [layer].GetNumInput ();
+
+			float[,] deltaW = new float [numOut, numIn];
+			float[] deltaB  = new float [numOut];
+
+			float[][] prev_output = new float[batchSize][];
+
+			if ( ANN_List [layer].BatchBackward ( back_err, ref deltaW, ref deltaB, ref prev_output ) == MLState.ML_ERROR )
+			{
+				return MLState.ML_ERROR;
+			}
+
+			back_err = (float[][])prev_output.Clone ();
+
+			if( ANN_List [layer].Update( deltaW, deltaB, lrnRate ) == MLState.ML_ERROR )
+			{
+				return MLState.ML_ERROR;
+			}
+		}
+
 		return MLState.ML_SUCCESS;
 	}
 

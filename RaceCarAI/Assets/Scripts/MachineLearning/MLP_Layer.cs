@@ -86,6 +86,8 @@ public class MLP_Layer
 
 		for ( int i = 0; i < batchSize ; i++ )
 		{
+			prev_output[i] = new float[numIn];
+
 			if ( Backward ( output [i], layerInput [i], (float)batchSize, ref tmpDeltaW, ref tmpDeltaB, ref prev_output [i] ) == MLState.ML_ERROR )
 			{
 				return MLState.ML_ERROR;
@@ -106,6 +108,8 @@ public class MLP_Layer
 
 		for ( int i = 0; i < batchSize ; i++ )
 		{
+			output [i] = new float[numOut];
+
 			if ( Forward (input [i], ref output [i]) == MLState.ML_ERROR )
 			{
 				return MLState.ML_ERROR;
