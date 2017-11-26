@@ -102,7 +102,7 @@ public class MLP_ANN
 
 		errorRate = 0;
 
-		for ( int layer = 0; layer < numLayer - 1; layer++ )
+		for ( int layer = 0; layer < numLayer; layer++ )
 		{
 			float[][] layerOutput = new float[batchSize][];
 
@@ -117,7 +117,7 @@ public class MLP_ANN
 
 		LossFunction.Evaluate( layerOutputs[ numLayer - 1 ], train_output, ref errorRate, ref back_err );
 
-		for ( int layer = numLayer - 1; layer < 0; layer-- )
+		for ( int layer = numLayer - 1; layer >= 0; layer-- )
 		{
 			int numOut = ANN_List [layer].GetNumOutput ();
 			int numIn  = ANN_List [layer].GetNumInput ();

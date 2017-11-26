@@ -4,8 +4,15 @@ using UnityEngine;
 
 public class MLP_Print
 {
+	static private bool isDebug = false;
+
 	public static void PrintLayerParameter ( int numOut, int numIn, float[,] Weight, float[] bias )
 	{
+		if (isDebug != true)
+		{
+			return;
+		}
+
 		object biasArray   = "bias:\n";
 		object WeightArray = "Weight:\n";
 
@@ -37,6 +44,11 @@ public class MLP_Print
 
 	public static void PrintArray ( float[] array, string name )
 	{
+		if (isDebug != true)
+		{
+			return;
+		}
+
 		int len      = array.Length;
 		object Array =  name + ":\n";
 

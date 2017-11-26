@@ -36,6 +36,7 @@ public class MLP_Layer
 	ActiveFc AF;
 
 	float[][] layerInput;
+	float[][] layerOutput;
 
 	/*-------------------------
 	Public Methods
@@ -73,7 +74,7 @@ public class MLP_Layer
 		return MLState.ML_SUCCESS;
 	}
 
-	public MLState BatchBackward ( float[][] output, ref float[,] deltaW, ref float[] deltaB, ref float[][] prev_output )
+	public MLState BatchBackward ( float[][] backErr, ref float[,] deltaW, ref float[] deltaB, ref float[][] prev_output )
 	{
 		if ( layerInput == null )
 		{
@@ -81,7 +82,7 @@ public class MLP_Layer
 			return MLState.ML_ERROR;
 		}
 
-		int batchSize       = output.GetLength (0);
+		int batchSize       = backErr.GetLength (0);
 		float [,] tmpDeltaW = new float[numOut, numIn];
 		float [] tmpDeltaB  = new float[numOut];
 
@@ -92,10 +93,16 @@ public class MLP_Layer
 		{
 			prev_output[i] = new float[numIn];
 
-			if ( Backward ( output [i], layerInput [i], (float)batchSize, ref tmpDeltaW, ref tmpDeltaB, ref prev_output [i] ) == MLState.ML_ERROR )
+			MLP_Print.PrintArray (backErr[i], "backErr_batch"+i);
+
+			if ( Backward ( layerOutput[i], backErr [i], layerInput [i], (float)batchSize, ref tmpDeltaW, ref tmpDeltaB, ref prev_output [i] ) == MLState.ML_ERROR )
 			{
 				return MLState.ML_ERROR;
 			}
+
+			MLP_Print.PrintArray (layerInput[i], "layerInput_bach"+i);
+			MLP_Print.PrintArray (prev_output[i], "prev_output");
+			MLP_Print.PrintLayerParameter (numOut, numIn, tmpDeltaW, tmpDeltaB);
 
 			FloatArraySum ( tmpDeltaB, deltaB, ref deltaB );
 			FloatArraySum ( tmpDeltaW, deltaW, ref deltaW );
@@ -114,11 +121,17 @@ public class MLP_Layer
 		{
 			output [i] = new float[numOut];
 
+			MLP_Print.PrintArray ( input[i], "layer_input_batch" + i );
+
 			if ( Forward (input [i], ref output [i]) == MLState.ML_ERROR )
 			{
 				return MLState.ML_ERROR;
 			}
+
+			MLP_Print.PrintArray ( output[i], "layer_output_batch" + i );
 		}
+
+		layerOutput = (float[][])output.Clone ();
 
 		return MLState.ML_SUCCESS;
 	}
@@ -146,13 +159,13 @@ public class MLP_Layer
 		switch ( AF )
 		{
 		case ActiveFc.RELU:
-			RELU ( output, ref output, MLDirection.Forward );
+			RELU ( output, ref output );
 			break;
 		case ActiveFc.Sigmoid:
-			Sigmoid ( output, ref output, MLDirection.Forward );
+			Sigmoid ( output, ref output );
 			break;
 		case ActiveFc.Tanh:
-			Tanh ( output, ref output, MLDirection.Forward );
+			Tanh ( output, ref output );
 			break;
 		default:
 			break;
@@ -189,37 +202,39 @@ public class MLP_Layer
 	/*-------------------------
 	Private Methods
 	-------------------------*/
-	private MLState Backward ( float[] output, float[] input, float batchSize, ref float[,] deltaW, ref float[] deltaB, ref float[] prev_output )
+	private MLState Backward ( float[] layerOut, float[] backErr, float[] input, float batchSize, ref float[,] deltaW, ref float[] deltaB, ref float[] prev_output )
 	{
-		if ( output.Length != numOut )
+		if ( backErr.Length != numOut && layerOut.Length != numOut )
 		{
-			Debug.LogError ("[Backward] number of float[] output(" + output.Length + ") is not equal to numOut(" + numOut + ")");
+			Debug.LogError ("[Backward] number of float[] backErr(" + backErr.Length + ") is not equal to numOut(" + numOut + ")");
 			return MLState.ML_ERROR;
 		}
 
 		switch ( AF )
 		{
 		case ActiveFc.RELU:
-			RELU ( output, ref output, MLDirection.Backward );
+			RELU_derivative ( backErr, ref backErr );
 			break;
 		case ActiveFc.Sigmoid:
-			Sigmoid ( output, ref output, MLDirection.Backward );
+			Sigmoid_derivative ( layerOut, backErr, ref backErr );
 			break;
 		case ActiveFc.Tanh:
-			Tanh ( output, ref output, MLDirection.Backward );
+			Tanh_derivative ( layerOut, backErr, ref backErr );
 			break;
 		default:
 			break;
 		}
 
+		MLP_Print.PrintArray (backErr, "a");
+
 		for (int i = 0; i < numOut; i++)
 		{
 			for (int j = 0; j < numIn; j++)
 			{
-				deltaW [i, j] = output [i] * input [j] / batchSize;
+				deltaW [i, j] = backErr [i] * input [j] / batchSize;
 			}
 
-			deltaB [i] = output [i] / batchSize;
+			deltaB [i] = backErr [i] / batchSize;
 		}
 
 		FillFloatArrayToZero (ref prev_output);
@@ -228,7 +243,7 @@ public class MLP_Layer
 		{
 			for (int j = 0; j < numOut; j++)
 			{
-				prev_output [i] += Weight [i, j] * output [j];
+				prev_output [i] += Weight [j, i] * backErr [j];
 			}
 		}
 
@@ -292,71 +307,65 @@ public class MLP_Layer
 	/*-------------------------
 	Activation Function
 	-------------------------*/
-	private void RELU ( float[] input, ref float[] output, MLDirection dir )
+	private void RELU ( float[] input, ref float[] output )
 	{
-		if (dir == MLDirection.Forward)
+		for (int i = 0; i < input.Length; i++)
 		{
-			for (int i = 0; i < input.Length; i++)
+			if (input [i] < 0)
 			{
-				if (input [i] < 0)
-				{
-					output [i] = 0;
-				}
-				else
-				{
-					output [i] = input [i];
-				}
+				output [i] = 0;
 			}
-		}
-		else
-		{
-			for (int i = 0; i < input.Length; i++)
+			else
 			{
-				if (input [i] < 0)
-				{
-					output [i] = 0;
-				}
-				else
-				{
-					output [i] = input [i];
-				}
-			}	
-		}
-	}
-
-	private void Sigmoid ( float[] input, ref float[] output, MLDirection dir )
-	{
-		if (dir == MLDirection.Forward)
-		{
-			for ( int i = 0; i < input.Length; i++ )
-			{
-				output [i] = 1.0f / ( 1.0f + Mathf.Exp ( -input [i] ) );
-			}
-		}
-		else
-		{
-			for ( int i = 0; i < input.Length; i++ )
-			{
-				output [i] = input [i] * ( 1.0f - input[i] );
+				output [i] = input [i];
 			}
 		}
 	}
 
-	private void Tanh ( float[] input, ref float[] output, MLDirection dir )
+	private void RELU_derivative ( float[] input, ref float[] output )
 	{
-		if (dir == MLDirection.Forward)
+		for (int i = 0; i < input.Length; i++)
 		{
-			for ( int i = 0; i < input.Length; i++ )
+			if (input [i] < 0)
 			{
-				output [i] = 2.0f / ( 1.0f + Mathf.Exp ( -2.0f * input [i] ) ) - 1;
+				output [i] = 0;
 			}
+			else
+			{
+				output [i] = input [i];
+			}
+		}	
+	}
+
+	private void Sigmoid ( float[] input, ref float[] output )
+	{
+		for ( int i = 0; i < input.Length; i++ )
+		{
+			output [i] = 1.0f / ( 1.0f + Mathf.Exp ( -input [i] ) );
 		}
-		else
+	}
+
+	private void Sigmoid_derivative ( float[] layerOut, float[] backErr, ref float[] output )
+	{
+		for ( int i = 0; i < backErr.Length; i++ )
 		{
-			for ( int i = 0; i < input.Length; i++ )
-			{
-				output [i] = 1.0f - input[i] * input[i];
-			}
+			output [i] = backErr [i] * ( layerOut[i] * ( 1.0f - layerOut[i] ) );
+		}
+	}
+
+	private void Tanh ( float[] input, ref float[] output )
+	{
+		for ( int i = 0; i < input.Length; i++ )
+		{
+			output [i] = 2.0f / ( 1.0f + Mathf.Exp ( -2.0f * input [i] ) ) - 1;
+		}
+	}
+
+	private void Tanh_derivative ( float[] layerOut, float[] backErr, ref float[] output )
+	{
+		for ( int i = 0; i < backErr.Length; i++ )
+		{
+			output [i] = backErr [i] * ( 1.0f - layerOut[i] * layerOut[i] );
 		}
 	}
 }

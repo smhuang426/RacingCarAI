@@ -37,7 +37,7 @@ public class MLP_Loss
 
 		for ( int i = 0; i < batchSize; i++ )
 		{
-			output[i] = new float[ yHead.GetLength(1) ];
+			output[i] = new float[ yHead[i].Length ];
 
 			switch (LF)
 			{
@@ -83,11 +83,15 @@ public class MLP_Loss
 		switch ( LF )
 		{
 		case LossFc.MeanSquaredError:
+			
+			MLP_Print.PrintArray (yHead, "yHead");
 
 			for ( int i = 0; i < yHead.Length; i++ )
 			{
 				error [i] = yHead [i] - yExp [i];
 			}
+
+			MLP_Print.PrintArray (error, "error");
 
 			break;
 		default:
