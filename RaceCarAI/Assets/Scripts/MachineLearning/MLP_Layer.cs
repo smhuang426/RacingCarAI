@@ -89,6 +89,8 @@ public class MLP_Layer
 		FillFloatArrayToZero (ref deltaW);
 		FillFloatArrayToZero (ref deltaB);
 
+		Debug.LogWarning ("=====Layer======");
+
 		for ( int i = 0; i < batchSize ; i++ )
 		{
 			prev_output[i] = new float[numIn];
@@ -322,17 +324,17 @@ public class MLP_Layer
 		}
 	}
 
-	private void RELU_derivative ( float[] input, ref float[] output )
+	private void RELU_derivative ( float[] layerOut, float[] backErrf, ref float[] output )
 	{
-		for (int i = 0; i < input.Length; i++)
+		for (int i = 0; i < backErrf.Length; i++)
 		{
-			if (input [i] < 0)
+			if (layerOut [i] <= 0.0000001)
 			{
 				output [i] = 0;
 			}
 			else
 			{
-				output [i] = input [i];
+				output [i] = backErrf [i];
 			}
 		}	
 	}
@@ -347,10 +349,15 @@ public class MLP_Layer
 
 	private void Sigmoid_derivative ( float[] layerOut, float[] backErr, ref float[] output )
 	{
+		MLP_Print.PrintArray (backErr, "sig_backErr");
+		MLP_Print.PrintArray (layerOut, "sig_layerOut");
+
 		for ( int i = 0; i < backErr.Length; i++ )
 		{
 			output [i] = backErr [i] * ( layerOut[i] * ( 1.0f - layerOut[i] ) );
 		}
+
+		MLP_Print.PrintArray (output, "sig_a");
 	}
 
 	private void Tanh ( float[] input, ref float[] output )
