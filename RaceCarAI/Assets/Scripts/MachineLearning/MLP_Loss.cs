@@ -83,15 +83,11 @@ public class MLP_Loss
 		switch ( LF )
 		{
 		case LossFc.MeanSquaredError:
-			
-			MLP_Print.PrintArray (yHead, "yHead");
 
 			for ( int i = 0; i < yHead.Length; i++ )
 			{
 				error [i] = yHead [i] - yExp [i];
 			}
-
-			MLP_Print.PrintArray (error, "error");
 
 			break;
 		default:

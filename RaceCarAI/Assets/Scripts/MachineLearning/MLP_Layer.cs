@@ -89,22 +89,15 @@ public class MLP_Layer
 		FillFloatArrayToZero (ref deltaW);
 		FillFloatArrayToZero (ref deltaB);
 
-		Debug.LogWarning ("=====Layer======");
 
 		for ( int i = 0; i < batchSize ; i++ )
 		{
 			prev_output[i] = new float[numIn];
 
-			MLP_Print.PrintArray (backErr[i], "backErr_batch"+i);
-
 			if ( Backward ( layerOutput[i], backErr [i], layerInput [i], (float)batchSize, ref tmpDeltaW, ref tmpDeltaB, ref prev_output [i] ) == MLState.ML_ERROR )
 			{
 				return MLState.ML_ERROR;
 			}
-
-			MLP_Print.PrintArray (layerInput[i], "layerInput_bach"+i);
-			MLP_Print.PrintArray (prev_output[i], "prev_output");
-			MLP_Print.PrintLayerParameter (numOut, numIn, tmpDeltaW, tmpDeltaB);
 
 			FloatArraySum ( tmpDeltaB, deltaB, ref deltaB );
 			FloatArraySum ( tmpDeltaW, deltaW, ref deltaW );
@@ -123,14 +116,10 @@ public class MLP_Layer
 		{
 			output [i] = new float[numOut];
 
-			MLP_Print.PrintArray ( input[i], "layer_input_batch" + i );
-
 			if ( Forward (input [i], ref output [i]) == MLState.ML_ERROR )
 			{
 				return MLState.ML_ERROR;
 			}
-
-			MLP_Print.PrintArray ( output[i], "layer_output_batch" + i );
 		}
 
 		layerOutput = (float[][])output.Clone ();
@@ -195,7 +184,7 @@ public class MLP_Layer
 				Weight [i, j] = Weight [i, j] - lrnRate * deltaW [i, j];
 			}
 
-			bias [i] = bias [i] - lrnRate * bias [i];
+			bias [i] = bias [i] - lrnRate * deltaB [i];
 		}
 
 		return MLState.ML_SUCCESS;
@@ -215,7 +204,7 @@ public class MLP_Layer
 		switch ( AF )
 		{
 		case ActiveFc.RELU:
-			RELU_derivative ( backErr, ref backErr );
+			RELU_derivative ( layerOut, backErr, ref backErr );
 			break;
 		case ActiveFc.Sigmoid:
 			Sigmoid_derivative ( layerOut, backErr, ref backErr );
@@ -226,8 +215,6 @@ public class MLP_Layer
 		default:
 			break;
 		}
-
-		MLP_Print.PrintArray (backErr, "a");
 
 		for (int i = 0; i < numOut; i++)
 		{
@@ -349,15 +336,10 @@ public class MLP_Layer
 
 	private void Sigmoid_derivative ( float[] layerOut, float[] backErr, ref float[] output )
 	{
-		MLP_Print.PrintArray (backErr, "sig_backErr");
-		MLP_Print.PrintArray (layerOut, "sig_layerOut");
-
 		for ( int i = 0; i < backErr.Length; i++ )
 		{
 			output [i] = backErr [i] * ( layerOut[i] * ( 1.0f - layerOut[i] ) );
 		}
-
-		MLP_Print.PrintArray (output, "sig_a");
 	}
 
 	private void Tanh ( float[] input, ref float[] output )

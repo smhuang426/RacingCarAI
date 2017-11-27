@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class MLP_Print
 {
-	static private bool isDebug = false;
+	static private bool isDebug = true;
 
 	public static void PrintLayerParameter ( int numOut, int numIn, float[,] Weight, float[] bias )
 	{
