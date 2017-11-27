@@ -2,8 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class ANN_example : MonoBehaviour
-{
+public class ANN_example : MonoBehaviour {
 
 	// Use this for initialization
 	void Start ()
