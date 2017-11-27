@@ -54,6 +54,11 @@
      <Compile Include="Assets\Scripts\CarManager.cs" />
      <Compile Include="Assets\Scripts\CarOperator.cs" />
      <Compile Include="Assets\Scripts\GameManager.cs" />
+     <Compile Include="Assets\Scripts\MachineLearning\ANN_example.cs" />
+     <Compile Include="Assets\Scripts\MachineLearning\MLP_ANN.cs" />
+     <Compile Include="Assets\Scripts\MachineLearning\MLP_Layer.cs" />
+     <Compile Include="Assets\Scripts\MachineLearning\MLP_Loss.cs" />
+     <Compile Include="Assets\Scripts\MachineLearning\MLP_Print.cs" />
      <Compile Include="Assets\Scripts\Sensor.cs" />
      <Compile Include="Assets\Scripts\State\GameAiUpdateState.cs" />
      <Compile Include="Assets\Scripts\State\GameEndState.cs" />
